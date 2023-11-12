@@ -17,13 +17,12 @@ class CyclOpediaClassPage extends React.Component {
 
   componentDidMount = async () => {
     console.log("Component Did Mount");
-    if(JSON.parse(localStorage.getItem("cyclopediaState"))) {
+    if (JSON.parse(localStorage.getItem("cyclopediaState"))) {
       // this.setState(JSON.parse(localStorage.getItem("cyclopediaState")));
-    }
-    else {
+    } else {
       const resposne = await getRandomUser();
       console.log(resposne);
-      this.setState((prevState) => {
+      this.setState(() => {
         return {
           instructor: {
             name: resposne.data.first_name + " " + resposne.data.last_name,
@@ -35,10 +34,32 @@ class CyclOpediaClassPage extends React.Component {
     }
   };
 
-  componentDidUpdate() {
+  componentDidUpdate = async (previousProps, previousState) => {
     console.log("Component Did Update");
     localStorage.setItem("cyclopediaState", JSON.stringify(this.state));
-  }
+    console.log("Old State - " + previousState.studentCount);
+    console.log("New State - " + this.state.studentCount);
+
+    if (previousState.studentCount < this.state.studentCount) {
+      const response = await getRandomUser();
+      this.setState((prevState) => {
+        return {
+          studentList: [
+            ...prevState.studentList,
+            {
+              name: response.data.first_name + " " + response.data.last_name,
+            },
+          ],
+        };
+      });
+    } else if (previousState.studentCount > this.state.studentCount) {
+      this.setState((prevState) => {
+        return {
+          studentList: [],
+        };
+      });
+    }
+  };
 
   componentWillUnmount() {
     console.log("Component Will Unmount");
@@ -60,13 +81,30 @@ class CyclOpediaClassPage extends React.Component {
     });
   };
 
+  handleToggleInstructor = () => {
+    this.setState((prevState) => {
+      return {
+        hideInstructor: !prevState.hideInstructor,
+      };
+    });
+  };
+
   render() {
     console.log("Render Component");
     return (
       <div>
-        {this.state.instructor && (
-          <Instructor instructor={this.state.instructor}/>
-        )}
+        <div className="p-3">
+          <span className="h4 text-success">Instructor</span>&nbsp;
+          <i
+            onClick={this.handleToggleInstructor}
+            className={`btn btn-success btn-sm ${
+              this.state.hideInstructor ? "bi bi-toggle-off" : "bi bi-toggle-on"
+            }`}
+          ></i>
+          {!this.state.hideInstructor && this.state.instructor ? (
+            <Instructor instructor={this.state.instructor} />
+          ) : null}
+        </div>
         <div className="p-3">
           <span className="h4 text-success">Feedback</span>
           <br />
@@ -105,6 +143,13 @@ class CyclOpediaClassPage extends React.Component {
           >
             Remove All Students
           </button>
+          {this.state.studentList.map((student, index) => {
+            return (
+              <div className="text-white" key={index}>
+                - {student.name}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
