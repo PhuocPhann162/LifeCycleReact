@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { getRandomUser } from "./Utility/Api";
 import Instructor from "./Instructor";
 
@@ -12,15 +12,22 @@ const CyclOpediaFuncPage = () => {
     };
   });
 
+  const totalRender = useRef(0);
+  const prevStudentCount = useRef(0);
+  const feedbackInputRef = useRef(null);
+
+  const id = useId();
+
   const [inputName, setInputName] = useState("");
   const [inputFeedback, setInputFeedback] = useState("");
 
   useEffect(() => {
-    console.log("This will be called on EVERY Render");
+    totalRender.current = totalRender.current + 1;
+    console.log("render" + totalRender.current);
   });
 
   useEffect(() => {
-    console.log("This will be called on Initial/first Render/Mount");
+    // console.log("This will be called on Initial/first Render/Mount");
     const getUser = async () => {
       const response = await getRandomUser();
       setState((prevState) => {
@@ -41,7 +48,7 @@ const CyclOpediaFuncPage = () => {
 
   useEffect(() => {
     console.log(
-      "This will be called on whenever value of studentCounte changes"
+      "This will be called on whenever value of studentCount changes"
     );
     const getUser = async () => {
       const response = await getRandomUser();
@@ -57,9 +64,9 @@ const CyclOpediaFuncPage = () => {
         };
       });
     };
-    if (state.studentList.length < state.studentCount) {
+    if (prevStudentCount.current < state.studentCount) {
       getUser();
-    } else if (state.studentList.length > state.studentCount) {
+    } else if (prevStudentCount.current > state.studentCount) {
       setState((prevState) => {
         return {
           ...prevState,
@@ -70,42 +77,17 @@ const CyclOpediaFuncPage = () => {
   }, [state.studentCount]);
 
   useEffect(() => {
-    console.log("This will be called on Initial/first Render/Mount");
+    prevStudentCount.current = state.studentCount;
+    console.log(prevStudentCount.current);
+  }, [state.studentCount]);
+
+  useEffect(() => {
+    feedbackInputRef.current.focus();
+    //console.log("This will be called on Initial/first Render/Mount");
     return () => {
-      console.log("This will be called on when component will be UNMOUNTED");
+      //console.log("This will be called on when component will be UNMOUNTED");
     };
   }, []);
-
-  // componentDidUpdate = async (previousProps, previousState) => {
-  //   console.log("Component Did Update");
-  //   localStorage.setItem("cyclopediaState", JSON.stringify(this.state));
-  //   console.log("Old State - " + previousState.studentCount);
-  //   console.log("New State - " + this.state.studentCount);
-
-  //   if (previousState.studentCount < this.state.studentCount) {
-  //     const response = await getRandomUser();
-  //     this.setState((prevState) => {
-  //       return {
-  //         studentList: [
-  //           ...prevState.studentList,
-  //           {
-  //             name: response.data.first_name + " " + response.data.last_name,
-  //           },
-  //         ],
-  //       };
-  //     });
-  //   } else if (previousState.studentCount > this.state.studentCount) {
-  //     this.setState((prevState) => {
-  //       return {
-  //         studentList: [],
-  //       };
-  //     });
-  //   }
-  // };
-
-  // componentWillUnmount() {
-  //   console.log("Component Will Unmount");
-  // }
 
   const handleAddStudent = () => {
     setState((prevState) => {
@@ -148,6 +130,7 @@ const CyclOpediaFuncPage = () => {
           <Instructor instructor={state.instructor} />
         ) : null}
       </div>
+      <div className="p-3">Total Render : {totalRender.current}</div>
       <div className="p-3">
         <span className="h4 text-success">Feedback</span>
         <br />
@@ -158,17 +141,20 @@ const CyclOpediaFuncPage = () => {
           onChange={(e) => {
             setInputName(e.target.value);
           }}
+          id={`${id}-inputName`}
         ></input>{" "}
-        Value: {inputName}
+        <label htmlFor={`${id}-inputName`}>Name Value: </label> {inputName}
         <br />
         <textarea
           placeholder="Feedback..."
           value={inputFeedback}
+          ref={feedbackInputRef}
           onChange={(e) => {
             setInputFeedback(e.target.value);
           }}
+          id={`${id}-inputFeedback`}
         ></textarea>{" "}
-        Value: {inputFeedback}
+        <label htmlFor={`${id}-inputFeedback`}>Feedback Value: </label> {inputName}
       </div>
       <div className="p-3">
         <span className="h4 text-success">Students</span> <br />
